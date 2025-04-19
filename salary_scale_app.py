@@ -52,14 +52,31 @@ with tabs[0]:
     """)
 
     start_date = st.date_input("Date of Entry into the Teaching Service", value=datetime(2010, 9, 1), min_value=datetime(1985, 1, 1), max_value=datetime(2030, 12, 31))
-    entry_grade = st.selectbox("Grade at Entry", [2, 3, 4, 5])
+    with st.expander("ℹ️ What do these grades mean?", expanded=False):
+        st.markdown("""
+        - **Grade 2** — Assistant Teacher Primary (ATP)  
+        - **Grade 3** — Teacher I (Primary) or Teacher II (Secondary)  
+        - **Grade 4** — Teacher III (Secondary)  
+        - **Grade 5** — Dean or Head of Department (HOD)
+        """)
+
+    entry_grade = st.selectbox(
+        "Grade at Entry",
+        [2, 3, 4, 5],
+        help="Grade 2: ATP | Grade 3: T1 (Primary)/T2 (Secondary) | Grade 4: T3 | Grade 5: Dean/HOD"
+    )
 
     was_upgraded = st.checkbox("Were you upgraded to another grade?")
     upgrade_date = None
     current_grade = entry_grade
     if was_upgraded:
         upgrade_date = st.date_input("Date of Upgrade", value=datetime(2015, 9, 1), min_value=datetime(1985, 1, 1), max_value=datetime(2030, 12, 31))
-        current_grade = st.selectbox("Current Grade", [2, 3, 4, 5], index=[2, 3, 4, 5].index(entry_grade))
+        current_grade = st.selectbox(
+            "Current Grade",
+            [2, 3, 4, 5],
+            index=[2, 3, 4, 5].index(entry_grade),
+            help="Grade 2: ATP | Grade 3: T1 (Primary)/T2 (Secondary) | Grade 4: T3 | Grade 5: Dean/HOD"
+        )
 
     entered_salary = st.number_input("Your Current Salary (Optional)", min_value=0, value=0)
 
@@ -139,8 +156,8 @@ with tabs[1]:
             st.info(f"**Annual Pension:** ${annual_pension:,.2f}")
             st.success(f"**Gratuity (Lump Sum):** ${gratuity:,.2f}")
 
-# --- Footer ---
+
 st.markdown("""
 ---
-<center>Built with ❤️ by **TW Solutions**</center>
+<div style='text-align: center;'>Built with ❤️ by <strong>TW Solutions</strong></div>
 """, unsafe_allow_html=True)
