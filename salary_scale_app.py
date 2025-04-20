@@ -94,7 +94,7 @@ if "started" not in st.session_state:
     col1, col2 = st.columns([1, 4])
     with col1:
         try:
-            st.image("tw_logo.png", width=150)
+            st.image("tw_logo.png", width=600)
         except:
             pass
     with col2:
