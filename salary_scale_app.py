@@ -135,7 +135,7 @@ with tabs[0]:
         #- **Grade 3** — Teacher I (Primary) or Teacher II (Secondary)  
         #- **Grade 4** — Teacher III (Secondary)  
         #- **Grade 5** — Dean or Head of Department (HOD)
-        """)
+        #""")
 
     entry_grade = st.selectbox(
         "Grade at Entry",
