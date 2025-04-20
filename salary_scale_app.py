@@ -98,7 +98,7 @@ if "started" not in st.session_state:
         except:
             pass
     with col2:
-        st.markdown("#### TW Solutions Empowering Educators with Insightful Tools*")
+        st.markdown("#### TW Solutions Empowering Educators with Insightful Tools")
 
     st.title("TW Solutions – Teacher Salary Tool")
     st.markdown("""
@@ -206,7 +206,7 @@ with tabs[0]:
 
     st.markdown("""
     ---
-    📅 **Salary Scale Reference:** Reflects adjustments from **October 1, 2023** to **September 30, 2026**, including the **$255 Cost of Living Allowance (COLA)**.
+    📅 **Salary Scale Reference:** Reflects adjustments from **October 1, 2020** to **September 30, 2023**, including the **$255 Cost of Living Allowance (COLA)**.
     """)
 
 # --- Tab 2: Retirement Calculator ---
