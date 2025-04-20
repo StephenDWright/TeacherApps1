@@ -19,6 +19,12 @@ with open("salary_scales.json", "r") as f:
 with open("old_salary_scales.json", "r") as f:
     old_salary_scales = json.load(f)
 
+with open("salary_scales.json", "r") as f:
+    salary_scales = json.load(f)
+
+with open("old_salary_scales.json", "r") as f:
+    old_salary_scales = json.load(f)
+
 # Full pension percentage lookup table (10 years 0 months to 33 years 11 months)
 pension_table = {
     (y, m): round(15 + ((y - 10) * 1.5 + m * (1.5 / 12)), 3) for y in range(10, 34) for m in range(0, 12)
@@ -40,6 +46,42 @@ def compute_service_years(start: datetime, reference: datetime) -> int:
         ref_year -= 1
 
     return ref_year - start_year
+
+
+def calculate_step_placement(start_date, upgrade_date, was_upgraded, current_grade):
+    today = datetime.today().date()
+    effective_start = upgrade_date if was_upgraded else start_date
+    years_in_current_grade = compute_service_years(effective_start, today)
+
+    if years_in_current_grade == 0:
+        step_index = 0
+    elif years_in_current_grade <= 7:
+        step_index = years_in_current_grade
+    else:
+        longevity_years = years_in_current_grade - 7
+        longevity_steps = longevity_years // 2
+        step_index = 7 + longevity_steps
+
+    grade_key = str(current_grade)
+    available_steps = list(salary_scales[grade_key].keys())
+    max_valid_index = max(step_labels.index(step) for step in available_steps if step in step_labels)
+    step_index = min(step_index, max_valid_index)
+
+    current_step = step_labels[step_index]
+    return step_index, current_step, years_in_current_grade
+
+def calculate_pension_benefits(final_salary, years_service, months_service):
+    key = (years_service, months_service)
+    pension_percent = pension_table.get(key)
+
+    if pension_percent is None:
+        return None, None, None, None
+
+    monthly_pension = final_salary * (pension_percent / 100)
+    annual_pension = monthly_pension * 12
+    gratuity = monthly_pension * 50
+
+    return pension_percent, monthly_pension, annual_pension, gratuity
 
 # --- Tabs ---
 tabs = st.tabs(["Salary Step Checker", "Retirement Calculator"])
@@ -84,25 +126,11 @@ with tabs[0]:
 
     if st.button("Check Salary Step"):
         with st.spinner("Calculating your salary step..."):
-            today = datetime.today().date()
-            effective_start = upgrade_date if was_upgraded else start_date
-            years_in_current_grade = compute_service_years(effective_start, today)
-
-            if years_in_current_grade == 0:
-                step_index = 0
-            elif years_in_current_grade <= 7:
-                step_index = years_in_current_grade
-            else:
-                longevity_years = years_in_current_grade - 7
-                longevity_steps = longevity_years // 2
-                step_index = 7 + longevity_steps
+            step_index, current_step, years_in_current_grade = calculate_step_placement(
+                start_date, upgrade_date, was_upgraded, current_grade
+            )
 
             grade_key = str(current_grade)
-            available_steps = list(salary_scales[grade_key].keys())
-            max_valid_index = max(step_labels.index(step) for step in available_steps if step in step_labels)
-            step_index = min(step_index, max_valid_index)
-
-            current_step = step_labels[step_index]
             scale = old_salary_scales.get(grade_key, {}) if show_old_scale else salary_scales.get(grade_key, {})
             expected_salary = scale.get(current_step)
             scale_label = "previous salary scale" if show_old_scale else "current salary scale"
@@ -142,20 +170,20 @@ with tabs[1]:
     months_service = st.selectbox("Additional Months of Service", list(range(0, 12)))
 
     if st.button("Calculate Pension and Gratuity"):
-        key = (years_service, months_service)
-        pension_percent = pension_table.get(key)
+        pension_percent, monthly_pension, annual_pension, gratuity = calculate_pension_benefits(final_salary, years_service, months_service)
 
         if pension_percent is None:
             st.error("Pension percentage for this exact service time is not in the table.")
         else:
-            monthly_pension = final_salary * (pension_percent / 100)
-            annual_pension = monthly_pension * 12
-            gratuity = monthly_pension * 50
-
             st.success(f"**Monthly Pension:** ${monthly_pension:,.2f}")
             st.info(f"**Annual Pension:** ${annual_pension:,.2f}")
             st.success(f"**Gratuity (Lump Sum):** ${gratuity:,.2f}")
 
+    #st.markdown("""
+    #🔎 *Each grade has its own salary scale. You receive annual increments within a grade, and biennial increments once you reach longevity steps.*
+
+    #Keep in mind that your actual grade depends on your position and appointment from the Teaching Service Commission.
+    #""")
 
 st.markdown("""
 ---
