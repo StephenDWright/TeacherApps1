@@ -3,21 +3,28 @@ from datetime import datetime
 import math
 from PIL import Image
 
-# --- TW Solutions Logo and Branding Header ---
-col1, col2 = st.columns([1, 4])
-with col1:
-    st.image("tw_logo.png", width=800)
-with col2:
-    st.markdown("#### TW Solutions  \n*Empowering Educators with Insightful Tools*")
+st.markdown("""
+<style>
+div.stButton > button:first-child {
+    background-color: #b2c8b2;  /* Sage green */
+    color: black;
+    font-weight: 600;
+    border-radius: 6px;
+    padding: 0.5em 1.2em;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+    border: 2px solid transparent;
+}
+div.stButton > button:first-child:hover {
+    background-color: #a0b89a;
+    transform: scale(1.03);
+    border: 2px solid #ffe066; /* Yellow outline */
+}
+</style>
+""", unsafe_allow_html=True)
 
 # --- Salary Scales (Current and Placeholder for Previous) ---
 import json
-
-with open("salary_scales.json", "r") as f:
-    salary_scales = json.load(f)
-
-with open("old_salary_scales.json", "r") as f:
-    old_salary_scales = json.load(f)
 
 with open("salary_scales.json", "r") as f:
     salary_scales = json.load(f)
@@ -83,6 +90,34 @@ def calculate_pension_benefits(final_salary, years_service, months_service):
 
     return pension_percent, monthly_pension, annual_pension, gratuity
 
+if "started" not in st.session_state:
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        try:
+            st.image("tw_logo.png", width=150)
+        except:
+            pass
+    with col2:
+        st.markdown("#### TW Solutions Empowering Educators with Insightful Tools*")
+
+    st.title("TW Solutions – Teacher Salary Tool")
+    st.markdown("""
+    Welcome to your personalized salary and pension estimator for educators.
+
+    🔍 **What you can do with this app:**
+    - Estimate your correct salary step based on years of service
+    - Compare it with your current salary
+    - Calculate your expected pension and gratuity upon retirement
+
+    This tool reflects the **2023–2026 salary updates**, including the $255 COLA.
+
+    ---
+    """)
+    if st.button("Start Now"):
+        st.session_state.started = True
+        st.rerun()
+    st.stop()
+
 # --- Tabs ---
 tabs = st.tabs(["Salary Step Checker", "Retirement Calculator"])
 
@@ -93,7 +128,7 @@ with tabs[0]:
     Enter your information below. Click **Check Salary Step** to calculate your correct placement on the salary scale and compare it with your current salary.
     """)
 
-    start_date = st.date_input("Date of Entry into the Teaching Service", value=datetime(2010, 9, 1), min_value=datetime(1985, 1, 1), max_value=datetime(2030, 12, 31))
+    start_date = st.date_input("Date of Entry into the Teaching Service", value=datetime(2010, 9, 1), min_value=datetime(1985, 1, 1), max_value=datetime(2030, 12, 31), key="start_date")
     with st.expander("ℹ️ What do these grades mean?", expanded=False):
         st.markdown("""
         - **Grade 2** — Assistant Teacher Primary (ATP)  
@@ -112,7 +147,7 @@ with tabs[0]:
     upgrade_date = None
     current_grade = entry_grade
     if was_upgraded:
-        upgrade_date = st.date_input("Date of Upgrade", value=datetime(2015, 9, 1), min_value=datetime(1985, 1, 1), max_value=datetime(2030, 12, 31))
+        upgrade_date = st.date_input("Date of Upgrade", value=datetime(2015, 9, 1), min_value=datetime(1985, 1, 1), max_value=datetime(2030, 12, 31), key="upgrade_date")
         current_grade = st.selectbox(
             "Current Grade",
             [2, 3, 4, 5],
@@ -135,20 +170,36 @@ with tabs[0]:
             expected_salary = scale.get(current_step)
             scale_label = "previous salary scale" if show_old_scale else "current salary scale"
 
-            if expected_salary:
-                st.success(f"Based on your service history, your expected placement is **{current_step}** under the **{scale_label}**, with an estimated salary of **${expected_salary:,.2f}**.")
-                st.info(f"Years in Grade {current_grade}: {years_in_current_grade}")
+            st.session_state.salary_result = {
+                "step_index": step_index,
+                "current_step": current_step,
+                "years_in_current_grade": years_in_current_grade,
+                "expected_salary": expected_salary,
+                "scale_label": scale_label,
+                "scale": scale,
+                "grade_key": grade_key,
+                "entered_salary": entered_salary,
+                "current_grade": current_grade
+            }
 
-                if entered_salary:
-                    discrepancy = expected_salary - entered_salary
-                    if discrepancy == 0:
-                        st.success("Your salary matches the expected amount.")
-                    elif discrepancy > 0:
-                        st.warning(f"You may be underpaid by **${discrepancy:,.2f}**.")
-                    else:
-                        st.info(f"You may be overpaid by **${-discrepancy:,.2f}**.")
-            else:
-                st.error(f"No salary data available for {current_step} in Grade {current_grade}.")
+    if "salary_result" in st.session_state:
+        r = st.session_state.salary_result
+        if r["expected_salary"]:
+            st.success(f"Based on your service history, your expected placement is **{r['current_step']}** under the **{r['scale_label']}**, with an estimated salary of **${r['expected_salary']:,.2f}**.")
+            st.info(f"Years in Grade {r['current_grade']}: {r['years_in_current_grade']}")
+
+            
+
+            if r["entered_salary"]:
+                discrepancy = r["expected_salary"] - r["entered_salary"]
+                if discrepancy == 0:
+                    st.success("Your salary matches the expected amount.")
+                elif discrepancy > 0:
+                    st.warning(f"You may be underpaid by **${discrepancy:,.2f}**.")
+                else:
+                    st.info(f"You may be overpaid by **${-discrepancy:,.2f}**.")
+        else:
+            st.error(f"No salary data available for {r['current_step']} in Grade {r['current_grade']}.")
 
     if st.button("Reset"):
         st.session_state.clear()
@@ -179,11 +230,11 @@ with tabs[1]:
             st.info(f"**Annual Pension:** ${annual_pension:,.2f}")
             st.success(f"**Gratuity (Lump Sum):** ${gratuity:,.2f}")
 
-    #st.markdown("""
-    #🔎 *Each grade has its own salary scale. You receive annual increments within a grade, and biennial increments once you reach longevity steps.*
+    st.markdown("""
+    🔎 *Each grade has its own salary scale. You receive annual increments within a grade, and biennial increments once you reach longevity steps.*
 
-    #Keep in mind that your actual grade depends on your position and appointment from the Teaching Service Commission.
-    #""")
+    Keep in mind that your actual grade depends on your position and appointment from the Teaching Service Commission.
+    """)
 
 st.markdown("""
 ---
