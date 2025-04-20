@@ -98,7 +98,7 @@ if "started" not in st.session_state:
         except:
             pass
     with col2:
-        st.markdown("#### TW Solutions Empowering Educators with Insightful Tools")
+        st.markdown("#### TW Solutions \n*Empowering Educators with Insightful Tools*")
 
     st.title("TW Solutions – Teacher Salary Tool")
     st.markdown("""
