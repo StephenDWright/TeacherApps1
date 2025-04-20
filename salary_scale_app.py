@@ -109,7 +109,7 @@ if "started" not in st.session_state:
     - Compare it with your current salary
     - Calculate your expected pension and gratuity upon retirement
 
-    This tool reflects the **2023–2026 salary updates**, including the $255 COLA.
+    This tool reflects the **2020–2023 salary updates**, including the $255 COLA.
 
     ---
     """)
