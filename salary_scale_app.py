@@ -129,13 +129,6 @@ with tabs[0]:
     """)
 
     start_date = st.date_input("Date of Entry into the Teaching Service", value=datetime(2010, 9, 1), min_value=datetime(1985, 1, 1), max_value=datetime(2030, 12, 31), key="start_date")
-    # with st.expander("ℹ️ What do these grades mean?", expanded=False):
-        #st.markdown("""
-        #- **Grade 2** — Assistant Teacher Primary (ATP)  
-        #- **Grade 3** — Teacher I (Primary) or Teacher II (Secondary)  
-        #- **Grade 4** — Teacher III (Secondary)  
-        #- **Grade 5** — Dean or Head of Department (HOD)
-        #""")
 
     entry_grade = st.selectbox(
         "Grade at Entry",
